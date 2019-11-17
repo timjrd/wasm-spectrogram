@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    
+    <meta charset="utf-8">
+    <title>WASM Spectrogram</title>
+    
+    <style>
+     html, body, canvas {
+       display: block;
+       width: 100%;
+       height: 100%;
+       margin: 0;
+     }
+    </style>
+    
+    <script type="module">
+     import {main, default as init} from "./bin/index.js";
+     init("./bin/index_bg.wasm").then(() => main());
+    </script>
+    
+  </head>
+  
+  <body>
+    <canvas></canvas>
+  </body>
+  
+</html>

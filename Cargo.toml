@@ -9,6 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 rustfft = "3.0.0"
+console_error_panic_hook = "0.1.6"
 js-sys = "0.3.31"
 
 [dependencies.wasm-bindgen]
@@ -39,5 +40,7 @@ features = [
   "AudioProcessingEvent",
   "AudioBuffer",
   "MediaStreamAudioSourceNode",
+  "MediaStreamAudioDestinationNode",
   "AudioNode",
+  "AudioDestinationNode",
 ]

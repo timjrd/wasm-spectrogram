@@ -27,7 +27,11 @@ stdenv.mkDerivation {
     minify
     wasm-pack
     wasm-gc
-    (latest.rustChannels.nightly.rust.override {
+    ((rustChannelOf {
+      channel = "nightly";
+      date    = "2019-20-11";
+      sha256  = "0xwvfpp2lzrbqkmjblvakrr3kvw8l6yyq07lfmbx8g60kbw003l4";
+    }).rust.override {
       targets = ["wasm32-unknown-unknown"];
     })
   ];

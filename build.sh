@@ -7,7 +7,7 @@ then
   WASM_PACK_FLAGS="--release"
 else
   RELEASE=false
-  WASM_PACK_FLAGS=
+  WASM_PACK_FLAGS="--debug"
 fi
 
 wasm-pack \

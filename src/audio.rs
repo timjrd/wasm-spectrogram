@@ -15,23 +15,32 @@ use web_sys::MediaStreamConstraints;
 use crate::error::Error;
 
 
-type ProcessFn = Box<dyn FnMut(Input) -> f32>;
-type CancelFn = Box<dyn FnMut() -> bool>;
+type Process = Box<dyn FnMut(Buffer) -> bool>;
 
 pub struct Processor {
   pub buffer_size: u32,
-  pub process: ProcessFn,
-  pub cancel: CancelFn,
+  pub process: Process,
 }
 
-pub struct Input {
-  pub sample: f32,
+pub struct Buffer<'a> {
   pub sample_rate: f32,
+  pub data: &'a mut BufferData<'a>,
+}
+
+pub struct BufferData<'a> {
+  left: &'a mut [f32],
+  right: &'a mut [f32]
+}
+
+pub struct Sample<'a> {
+  pub left: &'a mut f32,
+  pub right: &'a mut f32,
 }
 
 struct Processor_ {
   args: Processor,
-  buffer: Vec<f32>,
+  left_buffer: Vec<f32>,
+  right_buffer: Vec<f32>,
   context: AudioContext,
   proc_node: ScriptProcessorNode,
   delete: Closure<dyn FnMut(JsValue)>,
@@ -39,6 +48,16 @@ struct Processor_ {
   _on_source: Closure<dyn FnMut(JsValue)>,
   _on_rejection: Closure<dyn FnMut(JsValue)>,
   _on_proc: Closure<dyn FnMut(AudioProcessingEvent)>,
+}
+
+
+impl BufferData<'_> {
+  pub fn iter_mut(&mut self) -> impl Iterator<Item=Sample> {
+    self.left.iter_mut().zip(self.right.iter_mut()).map(|(l,r)| Sample {
+      left: l,
+      right: r,
+    })
+  }
 }
 
 
@@ -76,8 +95,8 @@ pub fn start_processing(args: Processor) -> Result<(),Error> {
   let context = AudioContext::new()?;
   
   let proc_node = context
-    .create_script_processor_with_buffer_size_and_number_of_input_channels(
-      args.buffer_size, 1 )?;
+    .create_script_processor_with_buffer_size_and_number_of_input_channels_and_number_of_output_channels(
+      args.buffer_size, 2, 2 )?;
   
   proc_node.set_onaudioprocess(Some(on_proc.as_ref().dyn_ref()?));
   proc_node.connect_with_audio_node(&context.destination())?;
@@ -91,7 +110,8 @@ pub fn start_processing(args: Processor) -> Result<(),Error> {
     .catch(&on_rejection);
 
   *processor.borrow_mut() = Some( Processor_ {
-    buffer: vec![0.0; args.buffer_size as usize],
+    left_buffer: vec![0.0; args.buffer_size as usize],
+    right_buffer: vec![0.0; args.buffer_size as usize],
     args: args,    
     context: context,
     proc_node: proc_node,
@@ -114,26 +134,27 @@ fn on_source( processor: &mut Processor_,
 
 fn on_proc( processor: &mut Processor_,
             event: AudioProcessingEvent ) -> Result<(),Error> {
-  if (processor.args.cancel)() {
-    return Err(Error());
-  }
   
   let input_buffer = event.input_buffer()?;
   let output_buffer = event.output_buffer()?;
-  let sample_rate = input_buffer.sample_rate();
   
-  input_buffer.copy_from_channel(&mut processor.buffer, 0)?;
-  
-  for sample in processor.buffer.iter_mut() {
-    *sample = (processor.args.process)( Input {
-      sample: *sample,
-      sample_rate: sample_rate,
-    });
+  input_buffer.copy_from_channel(&mut processor.left_buffer, 0)?;
+  input_buffer.copy_from_channel(&mut processor.right_buffer, 1)?;
+
+  if (processor.args.process)( Buffer {
+    sample_rate: input_buffer.sample_rate(),
+    data: &mut BufferData {
+      left: &mut processor.left_buffer,
+      right: &mut processor.right_buffer,
+    }
+  }) {
+    output_buffer.copy_to_channel(&mut processor.left_buffer, 0)?;
+    output_buffer.copy_to_channel(&mut processor.right_buffer, 1)?;
+    Ok(())    
   }
-  
-  output_buffer.copy_to_channel(&mut processor.buffer, 0)?;
-  
-  Ok(())
+  else {
+    Err(Error())
+  }
 }
 
 fn cleanup<F>(processor: &RefCell<Option<Processor_>>, f: F) where

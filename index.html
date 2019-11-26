@@ -6,27 +6,56 @@
     <title>WASM Spectrogram</title>
     
     <style>
-     html, body, canvas {
-       display: block;
-       width: 100%;
+     html, body, #splash, #spectrogram {
        height: 100%;
+       width: 100%;
        margin: 0;
      }
-     button {
+
+     #splash {
        position: fixed;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       background-color: white;
+     }
+     #splash #button {
+       font-size: 200%;
+       padding: 10px;
+       border: 4px solid black;
+       background-color: transparent;
+       color: black;
+     }
+     #splash #button:enabled:hover {
+       background-color: black;
+       color: white;
+     }
+     #splash #button:disabled {
+       border: none;
+     }
+     
+     #spectrogram {
+       display: flex;
+       flex-direction: column;
+     }
+     #spectrogram canvas {
+       flex-grow: 1;
+       flex-shrink: 1;
+     }
+     #spectrogram img {
        width: 100%;
-       height: 100%;
      }
     </style>
     
     <script type="module">
      import {main, default as init} from "./bin/index.js";
      init("./bin/index_bg.wasm").then(() => {
-       const button = document.getElementsByTagName("button")[0];
-       button.innerText = "Start";
+       const splash = document.getElementById("splash");
+       const button = document.getElementById("button");
+       button.value = "click to start";
        button.disabled = false;
        button.onclick = function () {
-         this.remove();
+         splash.remove();
          main();
        }
      });
@@ -35,8 +64,19 @@
   </head>
   
   <body>
-    <button disabled>Loading...</button>
-    <canvas id="canvas"></canvas>
+    <div id="splash">
+      <input id="button"
+             type="button"
+             disabled="disabled"
+             autocomplete="off"             
+             value="loading..." />
+    </div>
+    
+    <div id="spectrogram">
+      <canvas id="canvas"></canvas>
+      <img src="piano-keyboard-40-87.svg"
+           alt="Piano Keyboard" />
+    </div>
   </body>
   
 </html>

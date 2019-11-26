@@ -3,60 +3,42 @@
 mod error;
 mod canvas;
 mod audio;
+mod ring;
+mod spectrogram;
 
 
-use std::f32::consts::PI;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use wasm_bindgen::prelude::*;
 
-// use rustfft::algorithm::Radix4;
-// use rustfft::FFT;
-// use rustfft::num_complex::Complex;
-// use rustfft::num_traits::Zero;
-
-use canvas::Renderer;
-use canvas::Frame;
-
 use audio::Processor;
-use audio::Buffer;
+use canvas::Renderer;
+use spectrogram::Spectrogram;
 
 
 #[wasm_bindgen]
 pub fn main() {
   console_error_panic_hook::set_once();
   
-  let draw_frame = Box::new(|frame: Frame| {
-    for pixel in frame.data.iter_mut() {
-      let nx = pixel.x as f32 / frame.width as f32;
-      *pixel.red = (nx * 255.0) as u8;
-      *pixel.green = (nx * 200.0) as u8;
-      *pixel.blue = (nx * 100.0) as u8;
-    }
-    true
-  });
-
-  let mut l = 0.0;
-  let mut r = 0.0;
-  let hz = 440.0;
-  let process = Box::new(move |buffer: Buffer| {
-    let dt = 1.0 / buffer.sample_rate;
-    for sample in buffer.data.iter_mut() {
-      l += (2.0*PI * hz * dt) % (2.0*PI);
-      r += (2.0*PI * (hz/2.0) * dt) % (2.0*PI);
-      *sample.left = f32::sin(l) * 0.8;
-      *sample.right = f32::sin(r) * 0.8;
-    }
-    true
-  });
+  let spectrogram = Rc::new(RefCell::new(
+    Spectrogram::new(9, 40.0, 87.0, 25.0)
+  ));
   
+  let s = spectrogram.clone();
+  audio::start_processing( Processor {
+    buffer_size: 512,
+    process: Box::new(move |buffer| {
+      s.borrow_mut().process(buffer)
+    }),
+  }).unwrap();
+  
+  let s = spectrogram;
   canvas::start_rendering( Renderer {
     canvas_id: "canvas".to_string(),
-    draw_frame: draw_frame,
-    resolution: 0.5,
-  }).unwrap();
-
-  audio::start_processing( Processor {
-    buffer_size: 1024,
-    process: process,
+    resolution: 0.7,
+    draw_frame: Box::new(move |context| {
+      s.borrow_mut().draw_frame(context)
+    }),
   }).unwrap();
 }

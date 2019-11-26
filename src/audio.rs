@@ -15,7 +15,7 @@ use web_sys::MediaStreamConstraints;
 use crate::error::Error;
 
 
-type Process = Box<dyn FnMut(Buffer) -> bool>;
+type Process = Box<dyn FnMut(Buffer) -> Result<(),Error>>;
 
 pub struct Processor {
   pub buffer_size: u32,
@@ -96,7 +96,7 @@ pub fn start_processing(args: Processor) -> Result<(),Error> {
   
   let proc_node = context
     .create_script_processor_with_buffer_size_and_number_of_input_channels_and_number_of_output_channels(
-      args.buffer_size, 2, 2 )?;
+      args.buffer_size, 1, 2 )?;
   
   proc_node.set_onaudioprocess(Some(on_proc.as_ref().dyn_ref()?));
   proc_node.connect_with_audio_node(&context.destination())?;
@@ -139,22 +139,19 @@ fn on_proc( processor: &mut Processor_,
   let output_buffer = event.output_buffer()?;
   
   input_buffer.copy_from_channel(&mut processor.left_buffer, 0)?;
-  input_buffer.copy_from_channel(&mut processor.right_buffer, 1)?;
-
-  if (processor.args.process)( Buffer {
+  
+  (processor.args.process)( Buffer {
     sample_rate: input_buffer.sample_rate(),
     data: &mut BufferData {
       left: &mut processor.left_buffer,
       right: &mut processor.right_buffer,
     }
-  }) {
-    output_buffer.copy_to_channel(&mut processor.left_buffer, 0)?;
-    output_buffer.copy_to_channel(&mut processor.right_buffer, 1)?;
-    Ok(())    
-  }
-  else {
-    Err(Error())
-  }
+  })?;
+  
+  output_buffer.copy_to_channel(&mut processor.left_buffer, 0)?;
+  output_buffer.copy_to_channel(&mut processor.right_buffer, 1)?;
+  
+  Ok(())    
 }
 
 fn cleanup<F>(processor: &RefCell<Option<Processor_>>, f: F) where

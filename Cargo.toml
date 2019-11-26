@@ -27,7 +27,6 @@ features = [
   "HtmlCollection",
   "Element",
   "HtmlCanvasElement",
-  "ImageBitmapRenderingContext",
   "CanvasRenderingContext2d",
   "ImageData",
   "MediaDevices",

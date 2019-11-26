@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
   <head>
     
     <meta charset="utf-8">
-    <title>WASM Spectrogram</title>
+    <title>WebAssembly Spectrogram</title>
     
     <style>
      html, body, #splash, #spectrogram {
@@ -21,16 +21,19 @@
      }
      #splash #button {
        font-size: 200%;
+       font-weight: bold;
+       font-family: monospace;
        padding: 10px;
        border: 4px solid black;
        background-color: transparent;
        color: black;
+       cursor: pointer;
      }
-     #splash #button:enabled:hover {
+     #splash #button.enabled:hover {
        background-color: black;
        color: white;
      }
-     #splash #button:disabled {
+     #splash #button.disabled {
        border: none;
      }
      
@@ -52,8 +55,8 @@
      init("./bin/index_bg.wasm").then(() => {
        const splash = document.getElementById("splash");
        const button = document.getElementById("button");
-       button.value = "click to start";
-       button.disabled = false;
+       button.innerText = "click to start";
+       button.className = "enabled";
        button.onclick = function () {
          splash.remove();
          main();
@@ -65,11 +68,7 @@
   
   <body>
     <div id="splash">
-      <input id="button"
-             type="button"
-             disabled="disabled"
-             autocomplete="off"             
-             value="loading..." />
+      <span id="button" class="disabled">loading...</span>
     </div>
     
     <div id="spectrogram">

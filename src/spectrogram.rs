@@ -3,8 +3,6 @@ use rustfft::FFT;
 use rustfft::num_complex::Complex;
 use rustfft::num_traits::Zero;
 
-//use web_sys::CanvasRenderingContext2d;
-
 use crate::error::Error;
 use crate::ring::Ring;
 use crate::audio::Buffer;
@@ -81,23 +79,6 @@ impl Spectrogram {
 
     Ok(())
   }
-
-  // pub fn draw_first_frame(context: &CanvasRenderingContext2d)
-  //                         -> Result<(),Error> {
-    
-  //   let width  = context.canvas()?.width()  as f64;
-  //   let height = context.canvas()?.height() as f64;
-    
-  //   context.set_fill_style(&"black".into());
-  //   context.set_stroke_style(&"white".into());
-  //   context.set_line_join("round");
-  //   context.set_line_width(0.005 * height);
-    
-  //   context.rect(0.0, 0.0, width, height);
-  //   context.fill();
-
-  //   Ok(())
-  // }
   
   pub fn draw_frame(&mut self, line: Line) -> Result<(),Error> {
     if self.freq_n == 0 {
@@ -137,62 +118,6 @@ impl Spectrogram {
     }
     
     Ok(())
-    
-    // let last = self.freq_sum.len() - 1;
-    
-    // let width  = context.canvas()?.width()  as f64;
-    // let height = context.canvas()?.height() as f64;
-
-    // let graph_height = 0.05 * height;
-    // let shift = 0.01 * height;
-    
-    // context.set_global_composite_operation("copy")?;
-    // context.draw_image_with_html_canvas_element(
-    //   &context.canvas()?, 0.0, -shift
-    // )?;
-    // context.set_global_composite_operation("source-over")?;
-    
-    // // context.rect(0.0, height - shift, width, shift);
-    // // context.fill();
-
-    // // context.set_global_alpha(0.02);
-    // // context.rect(0.0, 0.0, width, height);
-    // // context.fill();
-    // // context.set_global_alpha(1.0);
-    
-    // context.begin_path();
-    
-    // for (index,sum) in self.freq_sum.iter_mut().enumerate() {
-    //   let hz = (index + 1) as f32
-    //     * self.sample_rate
-    //     / self.output.len() as f32;
-      
-    //   let key = piano_key(hz);
-      
-    //   let x = (key - 28.0) / 86.0;
-    //   let j = x as f64 * width;
-
-    //   let y = boost(*sum / self.freq_n as f32, self.boost);
-    //   let i = height - graph_height * y as f64;
-
-    //   if index == 0 {
-    //     context.move_to(-width, i);
-    //   }
-      
-    //   context.line_to(j,i);
-      
-    //   if index == last {
-    //     context.line_to(2.0 * width, i);
-    //   }
-      
-    //   *sum = 0.0;
-    // }
-
-    // context.stroke();
-    
-    // self.freq_n = 0;
-    
-    // Ok(())
   }
 }
 

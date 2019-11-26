@@ -1,4 +1,4 @@
-# ![WebAssembly Spectrogram](https://timjrd.github.io/wasm-spectrogram)
+# [WebAssembly Spectrogram](https://timjrd.github.io/wasm-spectrogram)
 
 A spectrogram running in the browser with WebAssembly and written in
 Rust with `rustfft` and `web-sys`.
